@@ -1,9 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Home, DollarSign, TrendingUp, FileText, ArrowRight, CheckCircle, AlertCircle, XCircle, Info, X } from 'lucide-react';
+import { Home, DollarSign, TrendingUp, FileText, ArrowRight, CheckCircle, AlertCircle, XCircle, Info, X, Save } from 'lucide-react';
+import { Navigation } from './components/Navigation';
+import { useAuth } from './contexts/AuthContext';
+import { supabase } from './lib/supabase';
 
 const MortgagePowerApp = () => {
+  const { user } = useAuth();
   const [currentPage, setCurrentPage] = useState('input');
   const [showScoreModal, setShowScoreModal] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
   const [formData, setFormData] = useState({
     zipCode: '',
     state: '',
@@ -771,16 +777,49 @@ const MortgagePowerApp = () => {
     }).format(value);
   };
 
+  const saveCalculation = async () => {
+    if (!user) {
+      setSaveMessage('Please log in to save your calculation');
+      return;
+    }
+
+    setSaving(true);
+    setSaveMessage('');
+
+    try {
+      const results = calculateResults();
+
+      const { error } = await supabase.from('calculator_sessions').insert([{
+        user_id: user.id,
+        ...formData,
+        pp_score: results.ppScore,
+        max_purchase_price_safe: results.scenarios[0].maxPrice,
+        max_purchase_price_target: results.scenarios[1].maxPrice,
+        max_purchase_price_stretch: results.scenarios[2].maxPrice,
+      }]);
+
+      if (error) throw error;
+      setSaveMessage('✓ Calculation saved successfully!');
+      setTimeout(() => setSaveMessage(''), 3000);
+    } catch (error) {
+      setSaveMessage('Error saving calculation: ' + error.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (currentPage === 'input') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-4 pb-safe">
-        <div className="max-w-3xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-xl p-4 md:p-8 mb-6">
-            <div className="flex items-center gap-3 mb-2">
-              <Home className="w-8 h-8 text-indigo-600" />
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Get Your Purchasing Power Score</h1>
-            </div>
-            <p className="text-sm md:text-base text-gray-600 mb-6 md:mb-8">Complete this quick assessment in under 3 minutes to discover your home buying potential.</p>
+      <>
+        <Navigation />
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-4 pb-safe">
+          <div className="max-w-3xl mx-auto">
+            <div className="bg-white rounded-2xl shadow-xl p-4 md:p-8 mb-6">
+              <div className="flex items-center gap-3 mb-2">
+                <Home className="w-8 h-8 text-indigo-600" />
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Get Your Purchasing Power Score</h1>
+              </div>
+              <p className="text-sm md:text-base text-gray-600 mb-6 md:mb-8">Complete this quick assessment in under 3 minutes to discover your home buying potential.</p>
 
             {/* Section A - Basics */}
             <div className="mb-8">
@@ -1506,19 +1545,43 @@ const MortgagePowerApp = () => {
           </div>
         </div>
       </div>
+      </>
     );
   }
 
   // Results Page
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 pb-safe">
-      <div className="max-w-4xl mx-auto">
-        <button
-          onClick={() => setCurrentPage('input')}
-          className="mb-4 text-indigo-600 hover:text-indigo-700 active:text-indigo-800 font-medium flex items-center gap-2 min-h-[44px] text-base"
-        >
-          ← Back to Calculator
-        </button>
+    <>
+      <Navigation />
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 pb-safe">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-between mb-4 gap-3">
+            <button
+              onClick={() => setCurrentPage('input')}
+              className="text-indigo-600 hover:text-indigo-700 active:text-indigo-800 font-medium flex items-center gap-2 min-h-[44px] text-base"
+            >
+              ← Back to Calculator
+            </button>
+            {user && (
+              <button
+                onClick={saveCalculation}
+                disabled={saving}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 active:bg-green-800 disabled:bg-green-400 text-white font-semibold rounded-lg transition-colors text-sm min-h-[44px]"
+              >
+                <Save className="w-4 h-4" />
+                {saving ? 'Saving...' : 'Save Results'}
+              </button>
+            )}
+          </div>
+          {saveMessage && (
+            <div className={`mb-4 p-3 rounded-lg text-sm ${
+              saveMessage.includes('✓') ? 'bg-green-50 text-green-700 border border-green-200' :
+              saveMessage.includes('log in') ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+              'bg-red-50 text-red-700 border border-red-200'
+            }`}>
+              {saveMessage}
+            </div>
+          )}
 
         {/* Top Summary */}
         <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-xl p-6 md:p-8 mb-6 text-white">
@@ -2004,6 +2067,7 @@ const MortgagePowerApp = () => {
         )}
       </div>
     </div>
+    </>
   );
 };
 
