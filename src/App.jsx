@@ -38,6 +38,7 @@ const MortgagePowerApp = () => {
     latePayments: false,
     collections: false,
     citizenshipStatus: 'us-citizen',
+    citizenshipOther: '',
     currentlyOwnHome: false,
     currentMortgageBalance: '',
     currentMortgagePayment: '',
@@ -789,14 +790,71 @@ const MortgagePowerApp = () => {
     try {
       const results = calculateResults();
 
-      const { error } = await supabase.from('calculator_sessions').insert([{
+      // Map formData to database column names (camelCase -> snake_case)
+      const sessionData = {
         user_id: user.id,
-        ...formData,
+        zip_code: formData.zipCode,
+        state: formData.state,
+        county: formData.county,
+        occupancy: formData.occupancy,
+        property_type: formData.propertyType,
+        purchase_intent: formData.purchaseIntent,
+        target_purchase_price: formData.targetPurchasePrice || null,
+        purchase_timeline: formData.purchaseTimeline,
+        has_property_identified: formData.hasPropertyIdentified,
+        under_contract: formData.underContract,
+        annual_income: formData.annualIncome || null,
+        other_monthly_income: formData.otherMonthlyIncome || null,
+        employment_type: formData.employmentType,
+        years_in_field: formData.yearsInField || null,
+        employment_years: formData.employmentYears || null,
+        self_employed_years: formData.selfEmployedYears,
+        income_needs_averaging: formData.incomeNeedsAveraging,
+        employment_gaps: formData.employmentGaps,
+        co_borrower: formData.coBorrower,
+        co_borrower_annual_income: formData.coBorrowerAnnualIncome || null,
+        co_borrower_credit_score: formData.coBorrowerCreditScore,
+        co_borrower_monthly_debts: formData.coBorrowerMonthlyDebts || null,
+        monthly_debts: formData.monthlyDebts || null,
+        student_loans_included: formData.studentLoansIncluded,
+        student_loan_payment: formData.studentLoanPayment || null,
+        child_support_alimony: formData.childSupportAlimony || null,
+        credit_score: formData.creditScore,
+        bankruptcy: formData.bankruptcy,
+        late_payments: formData.latePayments,
+        collections: formData.collections,
+        citizenship_status: formData.citizenshipStatus,
+        citizenship_other: formData.citizenshipOther || null,
+        first_time_homebuyer: formData.firstTimeHomebuyer,
+        veteran_eligible: formData.veteranEligible,
+        currently_own_home: formData.currentlyOwnHome,
+        current_mortgage_balance: formData.currentMortgageBalance || null,
+        current_mortgage_payment: formData.currentMortgagePayment || null,
+        current_home_disposition: formData.currentHomeDisposition,
+        investment_properties_owned: formData.investmentPropertiesOwned || 0,
+        rental_income: formData.rentalIncome || null,
+        rental_mortgages: formData.rentalMortgages || null,
+        down_payment: formData.downPayment || null,
+        down_payment_type: formData.downPaymentType,
+        down_payment_source: formData.downPaymentSource,
+        gift_donor_relationship: formData.giftDonorRelationship || null,
+        gift_amount: formData.giftAmount || null,
+        gift_letter_obtained: formData.giftLetterObtained,
+        closing_costs: formData.closingCosts || null,
+        reserves_months: formData.reservesMonths || null,
+        retirement_funds: formData.retirementFunds,
+        interest_rate: formData.interestRate || null,
+        loan_term_years: parseInt(formData.loanTermYears) || 30,
+        property_tax_rate: formData.propertyTaxRate || null,
+        insurance_rate: formData.insuranceRate || null,
+        hoa_monthly: formData.hoaMonthly || null,
         pp_score: results.ppScore,
         max_purchase_price_safe: results.scenarios[0].maxPrice,
         max_purchase_price_target: results.scenarios[1].maxPrice,
         max_purchase_price_stretch: results.scenarios[2].maxPrice,
-      }]);
+      };
+
+      const { error } = await supabase.from('calculator_sessions').insert([sessionData]);
 
       if (error) throw error;
       setSaveMessage('✓ Calculation saved successfully!');
@@ -1119,6 +1177,18 @@ const MortgagePowerApp = () => {
                     <option value="other">Other</option>
                   </select>
                 </div>
+                {formData.citizenshipStatus === 'other' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Please specify</label>
+                    <input
+                      type="text"
+                      value={formData.citizenshipOther}
+                      onChange={(e) => updateField('citizenshipOther', e.target.value)}
+                      className="w-full px-4 py-3 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-base"
+                      placeholder="Specify your citizenship status"
+                    />
+                  </div>
+                )}
               </div>
               <div className="space-y-3">
                 <label className="flex items-center gap-3 cursor-pointer">
@@ -1274,7 +1344,6 @@ const MortgagePowerApp = () => {
                     onChange={(e) => updateField('studentLoanPayment', e.target.value)}
                     className="w-full px-4 py-3 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-base"
                     placeholder="0"
-                    disabled={!formData.studentLoansIncluded}
                   />
                   <p className="text-xs text-gray-500 mt-1">Enter the qualifying payment if known</p>
                 </div>

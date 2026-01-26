@@ -70,6 +70,7 @@ CREATE TABLE IF NOT EXISTS public.calculator_sessions (
 
   -- Borrower Profile
   citizenship_status TEXT,
+  citizenship_other TEXT,
   first_time_homebuyer BOOLEAN DEFAULT false,
   veteran_eligible BOOLEAN DEFAULT false,
   currently_own_home BOOLEAN DEFAULT false,

@@ -30,7 +30,7 @@ export const Navigation = () => {
             {/* Logo */}
             <div className="flex items-center gap-2">
               <Home className="w-6 h-6 text-indigo-600" />
-              <span className="text-xl font-bold text-gray-900">MortBroker</span>
+              <span className="text-xl font-bold text-gray-900">Mortgage Purchasing Power Calculator</span>
             </div>
 
             {/* Auth Buttons */}

@@ -107,9 +107,11 @@ export const AuthProvider = ({ children }) => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      setUser(null);
       setProfile(null);
       return { error: null };
     } catch (error) {
+      console.error('Sign out error:', error);
       return { error };
     }
   };
