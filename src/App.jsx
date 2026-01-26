@@ -197,8 +197,8 @@ const MortgagePowerApp = () => {
     if (formData.latePayments) {
       recommendations.push({
         category: 'Credit',
-        issue: 'Recent late payments',
-        action: 'Wait 12 months from last late payment for better rates',
+        issue: 'Recent mortgage late payments',
+        action: 'Wait 12 months from last mortgage late payment for better rates',
         potentialGain: 10,
         priority: 'medium'
       });
@@ -217,8 +217,8 @@ const MortgagePowerApp = () => {
     if (formData.bankruptcy) {
       recommendations.push({
         category: 'Credit',
-        issue: 'Recent bankruptcy',
-        action: 'Wait longer from bankruptcy discharge date (4+ years ideal)',
+        issue: 'Recent bankruptcy (within 2 years)',
+        action: 'Wait until 2 years from bankruptcy discharge date',
         potentialGain: 15,
         priority: 'high'
       });
@@ -871,6 +871,7 @@ const MortgagePowerApp = () => {
                     className="w-full px-4 py-3 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-base"
                   >
                     <option value="single-family">Single-Family</option>
+                    <option value="townhouse">Townhouse</option>
                     <option value="condo">Condo</option>
                     {formData.occupancy !== 'second' && (
                       <option value="multi-family">
@@ -991,6 +992,7 @@ const MortgagePowerApp = () => {
                     className="w-full px-4 py-3 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-base"
                   >
                     <option value="w2">W-2 Employee</option>
+                    <option value="1099">1099 Contractor</option>
                     <option value="self-employed">Self-Employed</option>
                   </select>
                 </div>
@@ -1113,6 +1115,7 @@ const MortgagePowerApp = () => {
                     <option value="us-citizen">U.S. Citizen</option>
                     <option value="permanent-resident">Permanent Resident (Green Card)</option>
                     <option value="work-visa">Work Visa (H1-B, etc.)</option>
+                    <option value="foreign-national">Foreign National</option>
                     <option value="other">Other</option>
                   </select>
                 </div>
@@ -1320,7 +1323,7 @@ const MortgagePowerApp = () => {
                     onChange={(e) => updateField('bankruptcy', e.target.checked)}
                     className="w-6 h-6 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500"
                   />
-                  <span className="text-sm text-gray-700">Bankruptcy in last 4 years?</span>
+                  <span className="text-sm text-gray-700">Bankruptcy in last 2 years?</span>
                 </label>
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
@@ -1329,7 +1332,7 @@ const MortgagePowerApp = () => {
                     onChange={(e) => updateField('latePayments', e.target.checked)}
                     className="w-6 h-6 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500"
                   />
-                  <span className="text-sm text-gray-700">Late payments in last 12 months?</span>
+                  <span className="text-sm text-gray-700">Mortgage late payments in last 12 months?</span>
                 </label>
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
@@ -1343,11 +1346,11 @@ const MortgagePowerApp = () => {
               </div>
             </div>
 
-            {/* Section D.1 - Loan Assumptions */}
+            {/* Section D.1 - Loan Requests */}
             <div className="mb-8">
               <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
                 <TrendingUp className="w-5 h-5" />
-                Loan Assumptions
+                Loan Requests
               </h2>
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
