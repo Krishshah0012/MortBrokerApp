@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import { Home, LogOut, User } from 'lucide-react';
+import { Home, LogOut, User, FileText, Calculator } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { AuthModal } from './AuthModal';
+import { Link, useLocation } from 'react-router-dom';
 
 export const Navigation = () => {
   const { user, profile, signOut } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState('login');
+  const location = useLocation();
 
   const handleSignOut = async () => {
     await signOut();
@@ -28,9 +30,37 @@ export const Navigation = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <div className="flex items-center gap-2">
+            <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
               <Home className="w-6 h-6 text-indigo-600" />
               <span className="text-xl font-bold text-gray-900">Mortgage Purchasing Power Calculator</span>
+            </Link>
+
+            {/* Navigation Links */}
+            <div className="flex items-center gap-6">
+              <Link
+                to="/calculator"
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-colors ${
+                  location.pathname === '/calculator' || location.pathname === '/'
+                    ? 'text-indigo-600 bg-indigo-50'
+                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                <Calculator className="w-4 h-4" />
+                <span className="hidden md:inline">Calculator</span>
+              </Link>
+              {user && (
+                <Link
+                  to="/loans"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-colors ${
+                    location.pathname.startsWith('/loans')
+                      ? 'text-indigo-600 bg-indigo-50'
+                      : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+                >
+                  <FileText className="w-4 h-4" />
+                  <span className="hidden md:inline">My Loans</span>
+                </Link>
+              )}
             </div>
 
             {/* Auth Buttons */}
