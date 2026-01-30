@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext({});
@@ -15,12 +15,22 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const userIdRef = useRef(null);
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error('Session recovery error:', error);
+        setUser(null);
+        setProfile(null);
+        setLoading(false);
+        return;
+      }
+
       if (session?.user) {
+        userIdRef.current = session.user.id;
+        setUser(session.user);
         fetchProfile(session.user.id);
       } else {
         setLoading(false);
@@ -30,36 +40,34 @@ export const AuthProvider = ({ children }) => {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        await fetchProfile(session.user.id);
-      } else {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session?.user?.id);
+
+      if (event === 'TOKEN_REFRESHED') {
+        console.log('Token refreshed successfully');
+        return; // Don't update state on token refresh
+      }
+
+      if (event === 'SIGNED_OUT' || !session) {
+        userIdRef.current = null;
+        setUser(null);
         setProfile(null);
         setLoading(false);
+        return;
+      }
+
+      // Only update if user actually changed (prevent duplicate SIGNED_IN on tab switch)
+      if (session?.user?.id && session.user.id !== userIdRef.current) {
+        console.log('User ID changed, updating state');
+        userIdRef.current = session.user.id;
+        setUser(session.user);
+        await fetchProfile(session.user.id);
+      } else {
+        console.log('Same user, skipping state update');
       }
     });
 
-    // Handle tab visibility changes - refresh session when tab becomes visible
-    const handleVisibilityChange = async () => {
-      if (document.visibilityState === 'visible') {
-        // Tab became visible again - refresh the session
-        const { data: { session } } = await supabase.auth.getSession();
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          await fetchProfile(session.user.id);
-        } else {
-          setProfile(null);
-        }
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      subscription.unsubscribe();
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   const fetchProfile = async (userId) => {
