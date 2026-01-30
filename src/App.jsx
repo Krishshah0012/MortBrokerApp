@@ -8,7 +8,7 @@ import LoansPage from './pages/LoansPage';
 
 // Protected Route wrapper component
 const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
 
   if (loading) {
     return (
@@ -20,6 +20,15 @@ const ProtectedRoute = ({ children }) => {
 
   if (!user) {
     return <Navigate to="/" replace />;
+  }
+
+  // Wait for profile to load
+  if (!profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-gray-600">Loading profile...</div>
+      </div>
+    );
   }
 
   return children;

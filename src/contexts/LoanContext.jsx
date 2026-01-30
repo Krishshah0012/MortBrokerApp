@@ -20,6 +20,12 @@ export const LoanProvider = ({ children }) => {
 
   // Fetch all loans for current user (broker or borrower)
   const fetchLoans = useCallback(async (userId, userProfile) => {
+    if (!userId || !userProfile) {
+      console.error('fetchLoans called without userId or userProfile');
+      setLoading(false);
+      return { data: null, error: new Error('Missing userId or userProfile') };
+    }
+
     setLoading(true);
     try {
       let query = supabase
@@ -40,11 +46,16 @@ export const LoanProvider = ({ children }) => {
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error fetching loans:', error);
+        throw error;
+      }
+
       setLoans(data || []);
       return { data, error: null };
     } catch (error) {
       console.error('Error fetching loans:', error);
+      setLoans([]);
       return { data: null, error };
     } finally {
       setLoading(false);

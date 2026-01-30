@@ -11,11 +11,18 @@ const LoansPage = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (user && profile) {
-      fetchLoans(user.id, profile);
-    }
+    const loadLoans = async () => {
+      if (user && profile) {
+        const { error: fetchError } = await fetchLoans(user.id, profile);
+        if (fetchError) {
+          setError(fetchError.message || 'Failed to load loans');
+        }
+      }
+    };
+    loadLoans();
   }, [user, profile, fetchLoans]);
 
   const filteredLoans = loans.filter(loan => {
@@ -123,7 +130,22 @@ const LoansPage = () => {
         )}
 
         {/* Loans List */}
-        {loading ? (
+        {error ? (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-12 text-center">
+            <p className="text-red-600 mb-4">{error}</p>
+            <button
+              onClick={() => {
+                setError(null);
+                if (user && profile) {
+                  fetchLoans(user.id, profile);
+                }
+              }}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        ) : loading ? (
           <div className="flex justify-center items-center py-12">
             <div className="text-gray-600">Loading loans...</div>
           </div>
