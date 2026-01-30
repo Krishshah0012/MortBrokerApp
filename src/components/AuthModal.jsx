@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Mail, Lock, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -15,6 +15,22 @@ export const AuthModal = ({ isOpen, onClose, defaultMode = 'login' }) => {
   const [loading, setLoading] = useState(false);
 
   const { signIn, signUp } = useAuth();
+
+  // Reset modal state when it opens or defaultMode changes
+  useEffect(() => {
+    if (isOpen) {
+      setMode(defaultMode);
+      setAccountType('buyer');
+      setFormData({
+        email: '',
+        password: '',
+        fullName: '',
+        confirmPassword: '',
+      });
+      setError('');
+      setLoading(false);
+    }
+  }, [isOpen, defaultMode]);
 
   if (!isOpen) return null;
 
@@ -43,7 +59,6 @@ export const AuthModal = ({ isOpen, onClose, defaultMode = 'login' }) => {
         );
         if (error) throw error;
         onClose();
-        alert('Check your email to confirm your account!');
       }
     } catch (err) {
       setError(err.message);
